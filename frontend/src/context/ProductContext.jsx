@@ -43,7 +43,7 @@ const ProductProvider = ({ children }) => {
                  verified: true,
                  expiryDate: fp.expiry_date,
                  category: 'Vegetables', // Default mock fallback
-                 image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop',
+                 image: fp.image_url || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop',
                  condition: 'Good',
                  location: fp.shop_name || 'City Store',
                  unit: 'items'
@@ -62,13 +62,12 @@ const ProductProvider = ({ children }) => {
            setProducts(mappedProducts);
            setSellers(mappedSellers);
         } else {
-           setProducts(mockProducts);
-           setSellers(mockSellers);
+           const errData = await productsRes.json().catch(() => ({}));
+           alert("Supabase Database connection failed! Check your backend terminal.\nError: " + (errData.error || "Unknown"));
         }
       } catch (err) {
         console.error("Error connecting to backend:", err);
-        setProducts(mockProducts);
-        setSellers(mockSellers);
+        alert("Failed to reach Node backend server. Is it running on port 5000?");
       } finally {
         setCategories(mockCategories);
         setChats(mockChats);
@@ -88,7 +87,9 @@ const ProductProvider = ({ children }) => {
                  quantity: product.quantity || 1,
                  price: product.price,
                  expiry_date: product.expiryDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
-                 vendor_id: parseInt(product.sellerId) || 1,
+                 vendor_id: parseInt(product.sellerId) || null,
+                 seller_name: product.sellerName || 'Cake shop',
+                 image_url: product.image,
                  is_surplus: true
              })
         });
@@ -98,15 +99,14 @@ const ProductProvider = ({ children }) => {
              setProducts([newProduct, ...products]);
              return newProduct;
         } else {
-             const newProduct = { ...product, id: Date.now().toString(), createdAt: new Date().toISOString() };
-             setProducts([newProduct, ...products]);
-             return newProduct;
+             const errData = await res.json().catch(() => ({}));
+             alert("Failed to save product: " + (errData.error || "Database connection time out"));
+             return null;
         }
     } catch(err) {
         console.error("Error adding product:", err);
-        const newProduct = { ...product, id: Date.now().toString(), createdAt: new Date().toISOString() };
-        setProducts([newProduct, ...products]);
-        return newProduct;
+        alert("Failed to reach server. Please check your backend connection.");
+        return null;
     }
   };
 

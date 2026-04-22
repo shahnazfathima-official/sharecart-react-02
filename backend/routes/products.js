@@ -6,17 +6,23 @@ const db = require('../db');
 // POST /products
 router.post('/', async (req, res) => {
     try {
-        const { name, quantity, price, expiry_date, vendor_id, is_surplus } = req.body;
+        const { name, quantity, price, expiry_date, vendor_id, seller_name, is_surplus, image_url } = req.body;
 
-        // Input validation
-        if (!name || quantity == null || price == null || !expiry_date || !vendor_id) {
-            return res.status(400).json({ error: "Missing required fields" });
+        let actualVendorId = vendor_id;
+
+        // If the user's ID isn't in our Supabase vendors table yet, auto-create their shop!
+        if (!actualVendorId || isNaN(actualVendorId)) {
+            const newVendor = await db.query(
+                `INSERT INTO vendors (name, shop_name, location) VALUES ($1, $2, 'Local Store') RETURNING id`,
+                [seller_name || 'Cake shop', seller_name || 'Cake shop']
+            );
+            actualVendorId = newVendor.rows[0].id;
         }
 
         const newProduct = await db.query(
-            `INSERT INTO products (name, quantity, price, expiry_date, vendor_id, is_surplus) 
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [name, quantity, price, expiry_date, vendor_id, is_surplus || false]
+            `INSERT INTO products (name, quantity, price, expiry_date, vendor_id, is_surplus, image_url) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [name, quantity, price, expiry_date, actualVendorId, is_surplus || false, image_url]
         );
 
         res.status(201).json(newProduct.rows[0]);
@@ -39,7 +45,7 @@ router.get('/', async (req, res) => {
         res.status(200).json(allProducts.rows);
     } catch (err) {
         console.error('Error in GET /products:', err.message);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ error: "Server error", details: err.message });
     }
 });
 

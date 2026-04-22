@@ -7,7 +7,7 @@ import { Button } from '../components/ui';
 
 const Products = () => {
   const navigate = useNavigate();
-  const { products } = useProducts();
+  const { products, deleteProduct } = useProducts();
   const { user } = useAuth();
 
   // Filter only current user's products
@@ -19,8 +19,14 @@ const Products = () => {
     console.log('Edit product:', productId);
   };
 
-  const handleDeleteProduct = (productId) => {
-    console.log('Delete product:', productId);
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        await deleteProduct(productId);
+      } catch(err) {
+        console.error("Deletion failed:", err);
+      }
+    }
   };
 
   const handleCreateNew = () => {
