@@ -8,8 +8,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    phoneNumber: '',
-    businessName: '',
+    email: '',
     password: '',
   });
   const [errors, setErrors] = useState({});
@@ -17,10 +16,10 @@ const Login = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
-      newErrors.phoneNumber = 'Enter a valid 10-digit phone number';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Enter a valid email address';
     }
     if (!formData.password.trim()) {
       newErrors.password = 'Password is required';
@@ -37,20 +36,15 @@ const Login = () => {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      login({
-        id: 'user-' + Date.now(),
-        phoneNumber: formData.phoneNumber,
-        shopName: formData.businessName || 'Shop',
-        location: 'Location',
-        category: 'General',
-        avatar: null,
-        isPremium: false,
-      });
-      setIsLoading(false);
+    try {
+      await login(formData.email, formData.password);
       navigate('/');
-    }, 1000);
+    } catch (error) {
+      console.error(error);
+      setErrors({ email: error.message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -88,23 +82,14 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Phone Number"
-              name="phoneNumber"
-              type="tel"
-              placeholder="Enter 10-digit phone number"
-              value={formData.phoneNumber}
+              label="Email Address"
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              value={formData.email}
               onChange={handleChange}
-              error={errors.phoneNumber}
+              error={errors.email}
               icon={Phone}
-            />
-
-            <Input
-              label="Business Name (Optional)"
-              name="businessName"
-              type="text"
-              placeholder="Your shop or business name"
-              value={formData.businessName}
-              onChange={handleChange}
             />
 
             <Input

@@ -6,15 +6,23 @@ const db = require('../db');
 // POST /products
 router.post('/', async (req, res) => {
     try {
-        const { name, quantity, price, expiry_date, vendor_id, seller_name, is_surplus, image_url } = req.body;
+        const { name, quantity, price, expiry_date, vendor_id, seller_name, location, is_surplus, image_url, auth_id, vendor_avatar } = req.body;
 
-        let actualVendorId = vendor_id;
+        let actualVendorId = null;
 
-        // If the user's ID isn't in our Supabase vendors table yet, auto-create their shop!
-        if (!actualVendorId || isNaN(actualVendorId)) {
+        // Try binding product strictly to their persistent Supabase UUID 
+        if (auth_id) {
+            let vendorQuery = await db.query('SELECT id FROM vendors WHERE auth_id = $1', [auth_id]);
+            if (vendorQuery.rows.length > 0) {
+                actualVendorId = vendorQuery.rows[0].id;
+            }
+        }
+
+        // If the user hasn't synced their auth_id to a vendor row yet, create it.
+        if (!actualVendorId) {
             const newVendor = await db.query(
-                `INSERT INTO vendors (name, shop_name, location) VALUES ($1, $2, 'Local Store') RETURNING id`,
-                [seller_name || 'Cake shop', seller_name || 'Cake shop']
+                `INSERT INTO vendors (name, shop_name, location, auth_id, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+                [seller_name || 'Cake shop', seller_name || 'Cake shop', location || 'Local Store', auth_id || null, vendor_avatar || null]
             );
             actualVendorId = newVendor.rows[0].id;
         }
@@ -37,7 +45,7 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const allProducts = await db.query(
-            `SELECT p.*, v.name as vendor_name, v.shop_name 
+            `SELECT p.*, v.name as vendor_name, v.shop_name, v.auth_id 
              FROM products p 
              LEFT JOIN vendors v ON p.vendor_id = v.id
              ORDER BY p.created_at DESC`

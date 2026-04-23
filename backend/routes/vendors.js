@@ -6,7 +6,7 @@ const db = require('../db');
 // POST /vendors
 router.post('/', async (req, res) => {
     try {
-        const { name, shop_name, location } = req.body;
+        const { name, shop_name, location, auth_id, avatar_url } = req.body;
 
         // Input validation
         if (!name || !shop_name || !location) {
@@ -14,8 +14,8 @@ router.post('/', async (req, res) => {
         }
 
         const newVendor = await db.query(
-            'INSERT INTO vendors (name, shop_name, location) VALUES ($1, $2, $3) RETURNING *',
-            [name, shop_name, location]
+            'INSERT INTO vendors (name, shop_name, location, auth_id, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [name, shop_name, location, auth_id || null, avatar_url || null]
         );
 
         res.status(201).json(newVendor.rows[0]);

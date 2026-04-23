@@ -37,7 +37,7 @@ const ProductProvider = ({ children }) => {
                  price: parseFloat(fp.price),
                  originalPrice: Math.round(fp.price * 1.5),
                  quantity: fp.quantity,
-                 sellerId: fp.vendor_id.toString(),
+                 sellerId: fp.auth_id ? fp.auth_id.toString() : fp.vendor_id.toString(),
                  sellerName: fp.vendor_name || 'Store',
                  sellerRating: 4.5,
                  verified: true,
@@ -56,7 +56,7 @@ const ProductProvider = ({ children }) => {
               rating: 4.8,
               verified: true,
               location: fv.location,
-              image: 'https://images.unsplash.com/photo-1542838132-92b535c33f0c?w=400&h=400&fit=crop'
+              image: fv.avatar_url || 'https://images.unsplash.com/photo-1542838132-92b535c33f0c?w=400&h=400&fit=crop'
            }));
 
            setProducts(mappedProducts);
@@ -87,9 +87,12 @@ const ProductProvider = ({ children }) => {
                  quantity: product.quantity || 1,
                  price: product.price,
                  expiry_date: product.expiryDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
-                 vendor_id: parseInt(product.sellerId) || null,
+                 vendor_id: null,
                  seller_name: product.sellerName || 'Cake shop',
+                 location: product.location || 'Local Store',
                  image_url: product.image,
+                 vendor_avatar: product.sellerAvatar,
+                 auth_id: product.sellerId, // Supabase UI passes user.id UUID here
                  is_surplus: true
              })
         });

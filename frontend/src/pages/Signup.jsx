@@ -16,9 +16,9 @@ const businessTypes = [
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const [formData, setFormData] = useState({
-    phoneNumber: '',
+    email: '',
     shopName: '',
     ownerName: '',
     city: '',
@@ -34,10 +34,10 @@ const Signup = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
-      newErrors.phoneNumber = 'Enter a valid 10-digit phone number';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Enter a valid email address';
     }
     if (!formData.shopName.trim()) {
       newErrors.shopName = 'Shop name is required';
@@ -90,13 +90,8 @@ const Signup = () => {
     e.preventDefault();
     if (!validate()) return;
 
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      login({
-        id: 'user-' + Date.now(),
-        phoneNumber: formData.phoneNumber,
+    try {
+      await signup(formData.email, formData.password, {
         shopName: formData.shopName,
         ownerName: formData.ownerName,
         location: `${formData.area}, ${formData.city}`,
@@ -104,12 +99,14 @@ const Signup = () => {
         area: formData.area,
         businessType: formData.businessType,
         avatar: shopImagePreview,
-        image: shopImagePreview,
-        isPremium: false,
       });
-      setIsLoading(false);
       navigate('/');
-    }, 1000);
+    } catch (error) {
+      console.error(error);
+      setErrors({ email: error.message });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -202,14 +199,14 @@ const Signup = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Phone Number"
-                name="phoneNumber"
-                type="tel"
-                placeholder="10-digit phone number"
-                value={formData.phoneNumber}
+                label="Email Address"
+                name="email"
+                type="email"
+                placeholder="example@domain.com"
+                value={formData.email}
                 onChange={handleChange}
-                error={errors.phoneNumber}
-                icon={Phone}
+                error={errors.email}
+                icon={User}
               />
 
               <Input

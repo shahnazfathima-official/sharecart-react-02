@@ -137,6 +137,7 @@ const CreateListing = () => {
         originalPrice: Number(formData.originalPrice),
         sellerId: user?.id,
         sellerName: user?.shopName,
+        sellerAvatar: user?.avatar,
         image: productImagePreview,
         available: true,
         createdAt: new Date().toISOString(),
